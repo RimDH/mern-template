@@ -5,6 +5,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import generalRoutes from "./routes/generalRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
@@ -26,6 +28,9 @@ import AffiliateStat from "./models/AffiliateStat.js";
 // CONFIGURATION
 dotenv.config();
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json());
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
@@ -34,11 +39,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
-// ROUTES
+// ROUTES (API)
 app.use("/general", generalRoutes);
 app.use("/client", clientRoutes);
 app.use("/management", managementRoutes);
 app.use("/sales", salesRoutes);
+
+// Serve frontend (Vite build)
+app.use(express.static(path.join(__dirname, "../client/dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
 
 // MONGOOSE SETUP
 const PORT = process.env.PORT || 9000;
@@ -48,6 +59,7 @@ mongoose
     app.listen(PORT, () => {
       console.log(`Server running on port: ${PORT}`);
     });
+    // Uncomment to seed database
     // Product.insertMany(dataProduct)
     // ProductStat.insertMany(dataProductStat);
     // Transaction.insertMany(dataTransaction);
